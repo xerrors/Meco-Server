@@ -1,8 +1,6 @@
 # Logs
 logs
-node_modules
-package-lock.json
-yarn.lock
+*.log
 
 .vscode
 .temp
@@ -17,14 +15,7 @@ instance
 .idea
 
 # 数据文件
-*.db
-*.log
-
-dist
-
-/blog/blog/*
-dist-ssr
-*.local
+data
 
 # ssl 认证文件
-server/cert
+cert
