@@ -42,13 +42,21 @@ def scan_article_to_db():
                 extend_dir(path=os.path.join(path, file))
             else:
                 cur_frontmatter = parse_markdown(markdown_path)
-                article = LocalArticlesTable.query.filter_by(path=cur_frontmatter['permalink']).first()
+
+                permalink = cur_frontmatter['permalink']
+
+                if permalink[0] == '/':
+                    permalink = permalink[1:]
+                if permalink[-1] == '/':
+                    permalink = permalink[:-1]
+
+                article = LocalArticlesTable.query.filter_by(path=permalink).first()
                 if article:
                     article.local_path = markdown_path
                     db.session.commit()
                 else:
                     db.session.add(LocalArticlesTable(
-                        path=cur_frontmatter['permalink'],
+                        path=permalink,
                         local_path=markdown_path,
                     ))
                     db.session.commit()
