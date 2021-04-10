@@ -7,9 +7,12 @@ from app.utils.validate import validate_server_token
 from app.utils.database import get_all_messages
 from app.tables import LocalArticlesTable, Messages
 
+import os
 import frontmatter
 
 mod = Blueprint('admin', __name__, url_prefix='/admin')
+
+deploy_status = 0
 
 
 def not_login(msg='登录之后再试~'):
@@ -82,7 +85,6 @@ def upload_markdown():
     if not item or file_path != item.local_path:
         scan_article_to_db()
 
-    # TODO: 后续需要添加自动编译提交的功能，但考虑到 vuepress 编译太慢了
     return jsonify({"message": "已经保存到{}".format(file_path)})
 
 
@@ -155,3 +157,18 @@ def admin_logout():
         return jsonify({"message": '退出成功~', "code": '1000'})
     else:
         return not_login()
+
+
+@mod.route('/deploy-vuepress', methods=["GET"])
+def deploy_vuepress():
+    global deploy_status
+    if deploy_status == 'waiting':
+        return jsonify({"message": '等待中~'})
+    else:
+        deploy_status = 'waiting'
+        deploy_status = os.system("bash ~/Meco/deploy.sh")
+        if deploy_status == 0:
+            return jsonify({"message": '编译完成~'})
+        else:
+            return jsonify({"message": '或许在编译的时候出现了什么问题~'})
+
