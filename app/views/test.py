@@ -2,8 +2,9 @@ from flask import Blueprint
 from flask import request, jsonify
 from app import app, db
 from app.utils.articles import get_articles_from_db, scan_article_to_db
+from app.config import PREFIX
 
-mod = Blueprint('test', __name__)
+mod = Blueprint('test', __name__, url_prefix=PREFIX)
 
 
 

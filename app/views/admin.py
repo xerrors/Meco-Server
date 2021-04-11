@@ -6,11 +6,12 @@ from app.utils.articles import get_articles_from_zhihu, get_articles_from_csdn
 from app.utils.validate import validate_server_token
 from app.utils.database import get_all_messages
 from app.tables import LocalArticlesTable, Messages
+from app.config import PREFIX
 
 import os
 import frontmatter
 
-mod = Blueprint('admin', __name__, url_prefix='/admin')
+mod = Blueprint('admin', __name__, url_prefix= PREFIX + '/admin')
 
 deploy_status = 0
 

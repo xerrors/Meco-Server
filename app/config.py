@@ -27,3 +27,5 @@ SERVER_TOKEN = "1"
 DOMAIN_PRE = "https://www.xerrors.fun/"
 
 TOKEN = "szmmzmf"
+
+PREFIX = '/api'

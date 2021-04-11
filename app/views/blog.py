@@ -3,13 +3,13 @@ from flask import request, jsonify, abort
 from app import app, db
 from app.utils.articles import parse_markdown, get_articles_from_db
 from app.utils.database import rtn_zones, get_all_zhuanlan, get_page_view_by_path, rtn_friends
-from app.config import DOMAIN_PRE, TOKEN
+from app.config import DOMAIN_PRE, TOKEN, PREFIX
 from app.tables import Zone, FriendsTable, ZhuanlanTable, LocalArticlesTable, LocalArticlesComment, Messages
 from datetime import datetime
 
 from app.utils.zones import get_zones, delete_zone, update_zone, add_zone
 
-mod = Blueprint('blog', __name__)
+mod = Blueprint('blog', __name__, url_prefix=PREFIX)
 
 
 @mod.route("/visit", methods=["GET"])
