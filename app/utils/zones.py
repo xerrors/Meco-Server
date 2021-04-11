@@ -42,7 +42,7 @@ def delete_zone(msg_id):
     data = get_zones()
 
     for i in range(len(data)):
-        if data[i]['id'] == msg_id:
+        if int(data[i]['id']) == int(msg_id):
             del data[i]
             break
 

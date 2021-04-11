@@ -46,8 +46,8 @@ def del_zone():
     if token != TOKEN:
         abort(403, "Token 不对劲！")
     elif _id:
-        delete_zone(_id)
-        return jsonify({"message": "已删除", "data": get_zones()})
+        zones = delete_zone(_id)
+        return jsonify({"message": "已删除", "data": zones})
     else:
         return jsonify({"message": "请提供删除的动态的 id"}), 403
 
