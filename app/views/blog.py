@@ -2,9 +2,9 @@ from flask import Blueprint
 from flask import request, jsonify, abort
 from app import app, db
 from app.utils.articles import parse_markdown, get_articles_from_db
-from app.utils.database import rtn_zones, get_all_zhuanlan, get_page_view_by_path, rtn_friends
+from app.utils.database import get_all_zhuanlan, get_page_view_by_path, rtn_friends
 from app.config import DOMAIN_PRE, TOKEN, PREFIX
-from app.tables import Zone, FriendsTable, ZhuanlanTable, LocalArticlesTable, LocalArticlesComment, Messages
+from app.tables import FriendsTable, ZhuanlanTable, LocalArticlesTable, LocalArticlesComment, Messages
 from datetime import datetime
 
 from app.utils.zones import get_zones, delete_zone, update_zone, add_zone
@@ -201,7 +201,6 @@ def add_like():
     md = parse_markdown(item.local_path).metadata
     db.session.add(Messages(
         type="like",
-        date=datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
         link=DOMAIN_PRE + path,
         content="有人点赞了你的文章《{}》".format(md['title'])
     ))
@@ -241,14 +240,12 @@ def add_comment():
         reviewer_mail=reviewer_mail,
         content=content,
         follow_id=follow_id,
-        follow_name=follow_name,
-        date=datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+        follow_name=follow_name
     ))
     db.session.add(Messages(
         type="comment",
         link=DOMAIN_PRE + path,
         content=comment_msg,
-        date=datetime.today().strftime('%Y-%m-%d %H:%M:%S')
     ))
     db.session.commit()
     return jsonify({"message": "Good"})

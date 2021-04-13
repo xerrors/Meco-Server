@@ -1,11 +1,5 @@
 from app import db
-from app.tables import Zone, Messages, PageViewTable, FriendsTable, ZhuanlanTable
-
-def rtn_zones():
-    query_result = Zone.query.all()
-    zones = [zone.to_json() for zone in query_result]
-    return zones
-
+from app.tables import Messages, PageViewTable, FriendsTable, ZhuanlanTable
 
 def rtn_friends():
     query_result = db.session.query(FriendsTable).all()

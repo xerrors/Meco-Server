@@ -5,6 +5,8 @@ from app.utils.articles import get_article_list_from_dirs, get_articles_from_db,
 from app.utils.articles import get_articles_from_zhihu, get_articles_from_csdn
 from app.utils.validate import validate_server_token
 from app.utils.database import get_all_messages
+from app.utils.poster import get_posters, add_poster, delete_poster
+from app.utils.count import get_all_count
 from app.tables import LocalArticlesTable, Messages
 from app.config import PREFIX
 
@@ -149,6 +151,67 @@ def read_message():
 
     msgs = get_all_messages()
     return jsonify({"message": "Success", "data": msgs})
+
+
+@mod.route('/hide-comment', methods=["GET"])
+def hide_comment():
+    # TODO: 完善
+    pass
+
+
+@mod.route('/get-posters', methods=["GET"])
+def route_get_posters():
+    if not session.get('login'):
+        return not_login()
+    
+    return jsonify({ "message": "Success", "data": get_posters() })
+
+
+@mod.route('/add-poster', methods=["POST"])
+def route_add_poster():
+    if not session.get('login'):
+        return not_login()
+    
+    _cover = request.args.get('cover')
+    _link = request.args.get('link')
+
+    if not _cover or not _link:
+        return jsonify({ "message": "信息不足", "data": get_posters() })
+    
+    msg = add_poster({
+        'cover': _cover,
+        'link': _link,
+        'type': request.args.get('type') or "local",
+        'top': bool(request.args.get('top')),
+    })
+
+    return jsonify({ "message": msg, "data": get_posters() })
+
+
+@mod.route('/delete-poster', methods=["GET"])
+def route_delete_poster():
+    if not session.get('login'):
+        return not_login()
+
+    _link = request.args.get('link')
+
+    if not _link:
+        return jsonify({ "message": "信息不足", "data": get_posters() })
+
+    return jsonify({ "message": "已受理", "data": delete_poster(_link) })
+
+
+# 获取主站数据
+@mod.route('/count/all', methods=["GET"])
+def route_count_all():
+    if not session.get('login'):
+        return not_login()
+
+    return jsonify({"data": get_all_count()})
+    
+
+
+
 
 
 @mod.route('/logout', methods=["POST"])

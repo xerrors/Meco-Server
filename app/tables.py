@@ -1,22 +1,6 @@
 from app import db
 from datetime import datetime
-
-
-class Zone(db.Model):
-    __tablename__ = 'ZoneTable'
-    id = db.Column(db.Integer, primary_key=True)  # 主键
-    date = db.Column(db.String(20))
-    msg = db.Column(db.Text)
-    status = db.Column(db.String(20))
-
-    def to_json(self):
-        json_zone = {
-            'id': self.id,
-            'date': self.date,
-            'msg': self.msg,
-            'status': self.status
-        }
-        return json_zone
+from sqlalchemy.sql import func
 
 
 class CsdnArticlesTable(db.Model):
@@ -59,7 +43,7 @@ class LocalArticlesComment(db.Model):
     __tablename__ = 'LocalArticlesComment'
     id = db.Column(db.Integer, primary_key=True)
     path = db.Column(db.String(50), db.ForeignKey('LocalArticlesTable.path'))
-    date = db.Column(db.String(30))
+    date = db.Column(db.DateTime(timezone=True), server_default=func.now())
     reviewer = db.Column(db.String(20))
     reviewer_mail = db.Column(db.String(30))
     follow_id = db.Column(db.Integer, default=None) # 被评论的评论的 id
@@ -83,7 +67,7 @@ class LocalArticlesComment(db.Model):
 class Messages(db.Model):
     __tablename__ = 'Messages'
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.String(30))
+    date = db.Column(db.DateTime(timezone=True), server_default=func.now())
     type = db.Column(db.String(20))
     link = db.Column(db.String(50))
     content = db.Column(db.Text)
@@ -132,7 +116,7 @@ class PageViewTable(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ip = db.Column(db.String(30))
     domain = db.Column(db.String(30), default="")
-    date = db.Column(db.DateTime, default=datetime.utcnow)
+    date = db.Column(db.DateTime(timezone=True), server_default=func.now())
     path = db.Column(db.String(50)) # 去除协议和域名的路径部分
     user_agent = db.Column(db.String(20))
 
@@ -140,7 +124,7 @@ class PageViewTable(db.Model):
 class ZhuanlanTable(db.Model):
     __tablename__ = "ZhuanlanTable"
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
+    date = db.Column(db.DateTime(timezone=True), server_default=func.now())
     name = db.Column(db.String(10))
     title = db.Column(db.String(30))
     cover = db.Column(db.String(50))
