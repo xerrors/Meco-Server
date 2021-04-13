@@ -54,7 +54,7 @@ def update_zone(msg:dict):
     data = get_zones()
 
     for i in range(len(data)):
-        if data[i]['id'] == msg['id']:
+        if int(data[i]['id']) == int(msg['id']):
             data[i] = msg
             break
 
