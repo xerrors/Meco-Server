@@ -96,6 +96,7 @@ def upload_markdown():
 @mod.route('/logged', methods=["GET"])
 def check_is_logged():
     if session.get('login'):
+        from datetime import timedelta
         app.permanent_session_lifetime = timedelta(minutes=60)  # 更新存活时间
         return jsonify({"code": '1000', "message": "已登录"})
     else:
