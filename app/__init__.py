@@ -19,7 +19,6 @@ app.register_blueprint(test.mod)
 
 @app.errorhandler(404)
 def page_not_found(e):
-    print('123')
     return jsonify({"message": str(e)}), 404
 
 

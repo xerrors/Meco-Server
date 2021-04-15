@@ -5,7 +5,7 @@ from app.utils.articles import get_article_list_from_dirs, get_articles_from_db,
 from app.utils.articles import get_articles_from_zhihu, get_articles_from_csdn
 from app.utils.validate import validate_server_token
 from app.utils.database import get_all_messages
-from app.utils.poster import get_posters, add_poster, delete_poster
+from app.utils.poster import get_posters, add_poster, delete_poster, set_as_top
 from app.utils.count import get_all_count, get_last_days
 from app.tables import LocalArticlesTable, Messages
 from app.config import PREFIX
@@ -93,6 +93,15 @@ def upload_markdown():
     return jsonify({"message": "已经保存到{}".format(file_path)})
 
 
+@mod.route('/logged', methods=["GET"])
+def check_is_logged():
+    if session.get('login'):
+        app.permanent_session_lifetime = timedelta(minutes=60)  # 更新存活时间
+        return jsonify({"code": '1000', "message": "已登录"})
+    else:
+        return jsonify({"code": '2000', "message": "未登录"})
+
+
 @mod.route('/login', methods=["POST"])
 def admin_login():
     if session.get('login'):
@@ -161,7 +170,7 @@ def hide_comment():
     pass
 
 
-@mod.route('/get-posters', methods=["GET"])
+@mod.route('/poster', methods=["GET"])
 def route_get_posters():
     if not session.get('login'):
         return not_login()
@@ -169,38 +178,54 @@ def route_get_posters():
     return jsonify({ "message": "Success", "data": get_posters() })
 
 
-@mod.route('/add-poster', methods=["POST"])
+@mod.route('/poster', methods=["POST"])
 def route_add_poster():
     if not session.get('login'):
         return not_login()
     
-    _cover = request.args.get('cover')
-    _link = request.args.get('link')
+    data = request.get_data()
+    data = json.loads(data)
+    _cover = data.get("cover")
+    _link = data.get("link")
 
     if not _cover or not _link:
-        return jsonify({ "message": "信息不足", "data": get_posters() })
+        return abort(403, "信息不足")
     
     msg = add_poster({
         'cover': _cover,
         'link': _link,
-        'type': request.args.get('type') or "local",
-        'top': bool(request.args.get('top')),
+        'text': data.get('text'),
+        'type': data.get('type') or "local",
+        'top': bool(data.get('top')),
     })
 
     return jsonify({ "message": msg, "data": get_posters() })
 
 
-@mod.route('/delete-poster', methods=["GET"])
+@mod.route('/poster', methods=["DELETE"])
 def route_delete_poster():
     if not session.get('login'):
         return not_login()
 
-    _link = request.args.get('link')
-
-    if not _link:
+    _id = request.args.get('id')
+    if not _id:
         return jsonify({ "message": "信息不足", "data": get_posters() })
 
-    return jsonify({ "message": "已受理", "data": delete_poster(_link) })
+    return jsonify({ "message": "已受理", "data": delete_poster(_id) })
+
+
+@mod.route('/poster/settop', methods=["GET"])
+def route_set_as_top():
+    if not session.get('login'):
+        return not_login()
+
+    _id = request.args.get('id')
+    if not _id:
+        return jsonify({ "message": "信息不足", "data": get_posters() })
+    else:
+        set_as_top(_id)
+
+    return jsonify({ "message": "已受理", "data": get_posters() })
 
 
 # 获取主站数据

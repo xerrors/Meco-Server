@@ -2,10 +2,12 @@ import os
 import json
 
 from app.config import JSON_PATH
+from app.utils.mass import string_to_md5
 
 """
 cover:
 link:
+text:
 type:
 top:
 """
@@ -25,11 +27,11 @@ def save_poster(data):
 def add_poster(post:dict):
     data = get_posters()
 
-    # 如果已存在就直接更新
-    for i in range(len(data)):
-        if data[i]['link'] == post['link']:
-            data[i] = post
-            return "已存在，更新成功"
+    post['id'] = string_to_md5(post['link'])
+
+    if post['top']:
+        for i in data:
+            i['top'] = False
 
     # 否在在原数据上面追加
     data.append(post)
@@ -38,11 +40,23 @@ def add_poster(post:dict):
     return "添加成功"
 
 
-def delete_poster(link):
+def set_as_top(_id):
+    data = get_posters()
+
+    for i in data:
+        if i['id'] == _id:
+            i['top'] = True
+        else:
+            i['top'] = False
+
+    save_poster(data)
+
+
+def delete_poster(_id):
     data = get_posters()
 
     for i in range(len(data)):
-        if data[i]['link'] == link:
+        if data[i]['id'] == _id:
             del data[i]
             break
 
