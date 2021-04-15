@@ -6,9 +6,11 @@ from app.utils.articles import get_articles_from_zhihu, get_articles_from_csdn
 from app.utils.validate import validate_server_token
 from app.utils.database import get_all_messages
 from app.utils.poster import get_posters, add_poster, delete_poster
-from app.utils.count import get_all_count
+from app.utils.count import get_all_count, get_last_days
 from app.tables import LocalArticlesTable, Messages
 from app.config import PREFIX
+
+from monitor.status import MachineStatus
 
 import os
 import frontmatter
@@ -16,7 +18,7 @@ import frontmatter
 mod = Blueprint('admin', __name__, url_prefix= PREFIX + '/admin')
 
 deploy_status = 0
-
+ms = MachineStatus()
 
 def not_login(msg='登录之后再试~'):
     return jsonify({"message": '登录之后再试~', 'code': 2000})
@@ -208,10 +210,34 @@ def route_count_all():
         return not_login()
 
     return jsonify({"data": get_all_count()})
+
+
+# 获取主站数据
+@mod.route('/count/days', methods=["GET"])
+def route_count_days():
+    if not session.get('login'):
+        return not_login()
     
+    days = request.args.get('days')
+
+    return jsonify({"data": get_last_days(int(days) or 90)})
 
 
+# 获取服务器状态信息
+@mod.route('/status', methods=["GET"])
+def route_server_status():
+    if not session.get('login'):
+        return not_login()
 
+    ms.get_status_info()
+    status = {
+        'status': ms.status,
+        'cpu': ms.cpu,
+        'mem': ms.mem,
+        'network': ms.network,
+        'process': ms.process
+    }
+    return jsonify({"data": status})
 
 
 @mod.route('/logout', methods=["POST"])

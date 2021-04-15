@@ -1,4 +1,4 @@
-from app.tables import Messages, LocalArticlesComment, PageViewTable
+from app.tables import Messages, LocalArticlesComment, PageViewTable, LocalDataCount
 
 from datetime import datetime, date
 from datetime import timedelta
@@ -11,7 +11,10 @@ def get_days_ago(days, have_time=False):
     return date.today() - timedelta(days=days)
 
 
-def get_timezone_messages(start, end=date.today()):
+def get_timezone_messages(start, end=None):
+    if not end:
+        end = date.today()
+
     return Messages.query.filter(
         Messages.date <= end
     ).filter(
@@ -19,7 +22,10 @@ def get_timezone_messages(start, end=date.today()):
     )
 
 
-def get_timezone_pv(start, end=date.today()):
+def get_timezone_pv(start, end=None):
+    if not end:
+        end = date.today()
+
     return PageViewTable.query.filter(
         PageViewTable.date <= end
     ).filter(
@@ -59,7 +65,7 @@ def get_all_count():
 
     data_count = {
         "pv": {
-            "all": PageViewTable.query.count(),
+            "all": all_pv,
             "day": day_pv_count,
             "week": week_pv_count,
             "month": month_pv_count
@@ -75,8 +81,85 @@ def get_all_count():
             "day": day_comment_count,
             "week": week_comment_count,
             "month": month_comment_count
+        },
+        "all": {
+            "pv": all_pv,
+            "like": all_like,
+            "comment": all_comment
+        },
+        "day": {
+            "pv": day_pv_count,
+            "like": day_like_count,
+            "comment": day_comment_count,
+        },
+        "week": {
+            "pv": week_pv_count,
+            "like": week_like_count,
+            "comment": week_comment_count,
+        },
+        "month": {
+            "pv": month_pv_count,
+            "like": month_like_count,
+            "comment": month_comment_count,
         }
     }
 
     return data_count
 
+
+def store_day_value(day):
+    # 默认存储昨天的数据
+    if not day:
+        day = date.today() - timedelta(days=1)
+    elif type(day) == str:
+        day = datetime.strptime(day, date_format)
+
+    next_day = day + timedelta(days=1)
+
+    tempa = get_timezone_messages(day, next_day)
+    day_like_count = tempa.filter(Messages.type=='like').count()
+    day_comment_count = tempa.count() - day_like_count
+    day_pv_count = get_timezone_pv(day, next_day).count()
+
+    formatted_day = datetime.strftime(day, date_format)
+
+    from app import db
+    db.session.add(LocalDataCount(
+        date=formatted_day,
+        pv=day_pv_count,
+        like=day_like_count,
+        comment=day_comment_count
+    ))
+    db.session.commit()
+
+    return [formatted_day, day_pv_count, day_like_count, day_comment_count]
+
+
+def get_day_count(day):
+    """ 获取某一天的访问量数据（不一定用得到） """
+    if type(day) != str:
+        day = datetime.strftime(day, date_format)
+    
+    item = LocalDataCount.query.filter(LocalDataCount.date==day).first()
+
+    if item:
+        return [day, item.pv, item.like, item.comment]
+    else:
+        return store_day_value(day)
+
+
+def get_last_days(n=90):
+    start = date.today()
+
+    data = []
+    for i in range(n):
+        day = start - timedelta(days=i+1)
+        data.append(get_day_count(day))
+
+    return data
+        
+
+
+if __name__ == "__main__":
+    # 备份昨日的数据
+    store_day_value()

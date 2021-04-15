@@ -144,6 +144,16 @@ class ZhuanlanTable(db.Model):
         return json_data
 
 
+class LocalDataCount(db.Model):
+    __tablename__ = "LocalDataCount"
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.String(20))
+    pv = db.Column(db.Integer)
+    like = db.Column(db.Integer)
+    comment = db.Column(db.Integer)
+
+
+
 # 暂时觉得没有启用的必要
 # class Visitors(db.Model):
 #     __tablename__ = "Visitors"
