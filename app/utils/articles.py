@@ -94,7 +94,7 @@ def get_articles_from_csdn():
         item_dict['date'] = item.create_date
         item_dict['article_id'] = item.article_id
 
-        article_count = CsdnCount.query.filter_by(article_id=item.article_id).first()
+        article_count = CsdnCount.query.filter_by(article_id=item.article_id).all()[-1]
 
         item_dict['read_count'] = article_count.read_count
         item_dict['comment_count'] = article_count.comment_count
