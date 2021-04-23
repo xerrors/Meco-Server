@@ -54,8 +54,8 @@ class JuejinCount(db.Model):
 class LocalArticlesTable(db.Model):
     __tablename__ = 'LocalArticlesTable'
     id = db.Column(db.Integer, primary_key=True)
-    path = db.Column(db.String(50), unique=True)
-    local_path = db.Column(db.String(50))
+    path = db.Column(db.String(256), unique=True)
+    local_path = db.Column(db.String(256))
     read_count = db.Column(db.Integer, default=0)
     like_count = db.Column(db.Integer, default=0)
 
@@ -69,7 +69,7 @@ class LocalArticlesTable(db.Model):
 class LocalArticlesComment(db.Model):
     __tablename__ = 'LocalArticlesComment'
     id = db.Column(db.Integer, primary_key=True)
-    path = db.Column(db.String(50), db.ForeignKey('LocalArticlesTable.path'))
+    path = db.Column(db.String(256), db.ForeignKey('LocalArticlesTable.path'))
     date = db.Column(db.DateTime(timezone=True), server_default=func.now())
     reviewer = db.Column(db.String(20))
     reviewer_mail = db.Column(db.String(30))
@@ -96,7 +96,7 @@ class Messages(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime(timezone=True), server_default=func.now())
     type = db.Column(db.String(20))
-    link = db.Column(db.String(50))
+    link = db.Column(db.String(256))
     content = db.Column(db.Text)
     readed = db.Column(db.Boolean, default=False)
 
@@ -119,11 +119,11 @@ class FriendsTable(db.Model):
     __tablename__ = "FriendsTable"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20))
-    avatar = db.Column(db.String(50))
+    avatar = db.Column(db.String(128))
     title = db.Column(db.String(20))
-    mail = db.Column(db.String(20))
-    site = db.Column(db.String(20))
-    quote = db.Column(db.String(50))
+    mail = db.Column(db.String(64))
+    site = db.Column(db.String(64))
+    quote = db.Column(db.String(256))
 
     def to_json(self):
         json_friends = {
@@ -141,21 +141,21 @@ class FriendsTable(db.Model):
 class PageViewTable(db.Model):
     __tablename__ = "PageViewTable"
     id = db.Column(db.Integer, primary_key=True)
-    ip = db.Column(db.String(30))
-    domain = db.Column(db.String(30), default="")
+    ip = db.Column(db.String(64))
+    domain = db.Column(db.String(64), default="")
     date = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    path = db.Column(db.String(50)) # 去除协议和域名的路径部分
-    user_agent = db.Column(db.String(20))
+    path = db.Column(db.String(256)) # 去除协议和域名的路径部分
+    user_agent = db.Column(db.String(256))
 
 
 class ZhuanlanTable(db.Model):
     __tablename__ = "ZhuanlanTable"
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    name = db.Column(db.String(10))
-    title = db.Column(db.String(30))
-    cover = db.Column(db.String(50))
-    description = db.Column(db.String(100))
+    name = db.Column(db.String(20))
+    title = db.Column(db.String(64))
+    cover = db.Column(db.String(128))
+    description = db.Column(db.String(300))
     details = db.Column(db.Text)
 
     def to_json(self):
