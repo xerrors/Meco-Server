@@ -18,10 +18,37 @@ class CsdnCount(db.Model):
     date = db.Column(db.String(30))
     read_count = db.Column(db.Integer)
     comment_count = db.Column(db.Integer)
+    like_count = db.Column(db.Integer)
 
-    def update_count(self, read, comment):
+    def update_count(self, read, comment, like=0):
         self.read_count = read
         self.comment_count = comment
+        self.like_count = like
+
+
+class JuejinArticlesTable(db.Model):
+    __tablename__ = 'JuejinArticlesTable'
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.String(20))
+    draft_id = db.Column(db.String(20))
+    title = db.Column(db.String(60))
+    create_date = db.Column(db.String(30))
+
+
+class JuejinCount(db.Model):
+    __tablename__ = 'JuejinReadCount'
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.String(20), db.ForeignKey('JuejinArticlesTable.article_id'))
+    date = db.Column(db.String(30))
+    read_count = db.Column(db.Integer)
+    comment_count = db.Column(db.Integer)
+    like_count = db.Column(db.Integer)
+
+    def update_count(self, read, comment, like=0):
+        self.read_count = read
+        self.comment_count = comment
+        self.like_count = like
+
 
 
 class LocalArticlesTable(db.Model):

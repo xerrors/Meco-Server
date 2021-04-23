@@ -4,7 +4,9 @@ from app import app
 
 BLOG_PATH = '../Meco/docs/blog/'
 Debug=True
+
 CSDN_NAME="jaykm"
+JUEJIN_ID = "4248168660734280"
 
 WIN = sys.platform.startswith('win')
 if WIN:  # 如果是 Windows 系统，使用三个斜线

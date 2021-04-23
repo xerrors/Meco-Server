@@ -55,6 +55,9 @@ def set_as_top(_id):
 def delete_poster(_id):
     data = get_posters()
 
+    if len(data) == 1:
+        return data
+
     for i in range(len(data)):
         if data[i]['id'] == _id:
             del data[i]

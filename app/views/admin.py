@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import request, jsonify, abort, json, session
 from app import app, db
 from app.utils.articles import get_article_list_from_dirs, get_articles_from_db, scan_article_to_db, rename_markdown
-from app.utils.articles import get_articles_from_zhihu, get_articles_from_csdn
+from app.utils.articles import get_articles_from_juejin, get_articles_from_csdn
 from app.utils.validate import validate_server_token
 from app.utils.database import get_all_messages
 from app.utils.poster import get_posters, add_poster, delete_poster, set_as_top
@@ -27,15 +27,14 @@ def not_login(msg='登录之后再试~'):
 # 获取文章列表
 @mod.route('/articles', methods=["GET"])
 def get_articles():
-    print(session.get('login'))
     if not session.get('login'):
         return not_login()
 
     source = request.args.get('source')
     if source == 'csdn':
         articles = get_articles_from_csdn()
-    elif source == 'zhihu':
-        articles = get_articles_from_zhihu()
+    elif source == 'juejin':
+        articles = get_articles_from_juejin()
     elif source == 'db':
         articles = get_articles_from_db()
     elif source == 'local':
@@ -173,9 +172,6 @@ def hide_comment():
 
 @mod.route('/poster', methods=["GET"])
 def route_get_posters():
-    if not session.get('login'):
-        return not_login()
-    
     return jsonify({ "message": "Success", "data": get_posters() })
 
 

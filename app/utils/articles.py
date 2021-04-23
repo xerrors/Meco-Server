@@ -6,6 +6,7 @@ from app import db
 from app.config import BLOG_PATH
 from app.tables import LocalArticlesTable, LocalArticlesComment
 from app.tables import CsdnArticlesTable, CsdnCount
+from app.tables import JuejinArticlesTable, JuejinCount
 from app.utils.database import get_page_view_by_path
 
 
@@ -97,6 +98,32 @@ def get_articles_from_csdn():
 
         item_dict['read_count'] = article_count.read_count
         item_dict['comment_count'] = article_count.comment_count
+        item_dict['like_count'] = article_count.like_count or 0
+
+        article_list.append(item_dict)
+
+    return article_list
+
+
+
+def get_articles_from_juejin():
+    """ 从数据库中找寻已经爬取的 CSDN 文章 """
+
+    article_list = []
+    query_result = JuejinArticlesTable.query.all()
+
+    for item in query_result:
+        item_dict = {}
+        item_dict['title'] = item.title
+        item_dict['date'] = item.create_date
+        item_dict['article_id'] = item.article_id
+        item_dict['draft_id'] = item.draft_id
+
+        article_count = JuejinCount.query.filter_by(article_id=item.article_id).first()
+
+        item_dict['read_count'] = article_count.read_count
+        item_dict['comment_count'] = article_count.comment_count
+        item_dict['like_count'] = article_count.like_count
 
         article_list.append(item_dict)
 
