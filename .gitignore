@@ -19,3 +19,4 @@ data
 
 # ssl 认证文件
 cert
+app/utils/private.py
