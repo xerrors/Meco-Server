@@ -16,6 +16,9 @@ app.register_blueprint(blog.mod)
 app.register_blueprint(admin.mod)
 app.register_blueprint(test.mod)
 
+@app.route('/', methods=["GET"])
+def route_index():
+    return jsonify({"message": "You Got It!"})
 
 @app.errorhandler(404)
 def page_not_found(e):
