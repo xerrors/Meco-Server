@@ -1,7 +1,7 @@
 import os
 import json
 
-from app.config import JSON_PATH
+from app.config import DATA_PATH
 from app.utils.mass import string_to_md5
 
 """
@@ -13,14 +13,14 @@ top:
 """
 
 def get_posters():
-    with open(os.path.join(JSON_PATH, 'poster.json'), 'r') as f:
+    with open(os.path.join(DATA_PATH, 'poster.json'), 'r') as f:
         data = json.load(f)
     
     return data['data']
 
 
 def save_poster(data):
-    with open(os.path.join(JSON_PATH, 'poster.json'), 'w') as f:
+    with open(os.path.join(DATA_PATH, 'poster.json'), 'w') as f:
         json.dump({'data': data}, f)
 
 

@@ -143,7 +143,7 @@ def parse_markdown(markdown_path):
         return md
 
 
-def rename_markdown(md):
+def rename_markdown(md, cur_path="temp.md"):
     # 解析文件名并根据分类保存到对应的文件目录下
     path = md['permalink'][1:] if md['permalink'][0] == '/' else md['permalink']
 
@@ -169,7 +169,7 @@ def rename_markdown(md):
     if os.path.exists(file_path):
         os.remove(file_path)
 
-    os.renames('temp.md', file_path)
+    os.renames(cur_path, file_path)
     return file_path
 
 

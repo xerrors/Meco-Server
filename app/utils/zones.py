@@ -1,7 +1,7 @@
 import os
 import json
 
-from app.config import JSON_PATH
+from app.config import DATA_PATH
 
 """
 _id:     ID
@@ -11,14 +11,14 @@ status: 状态     eg "😫" （a emoji)
 """
 
 def get_zones():
-    with open(os.path.join(JSON_PATH, 'zone.json'), 'r') as f:
+    with open(os.path.join(DATA_PATH, 'zone.json'), 'r') as f:
         data = json.load(f)
     
     return data['data']
 
 
 def save_zone(data):
-    with open(os.path.join(JSON_PATH, 'zone.json'), 'w') as f:
+    with open(os.path.join(DATA_PATH, 'zone.json'), 'w') as f:
         json.dump({'data': data}, f)
 
 
@@ -63,7 +63,7 @@ def update_zone(msg:dict):
 
 
 if __name__ == '__main__':
-    JSON_PATH = '../../data'
+    DATA_PATH = '../../data'
     with open('../../../../Node/data/zoneMsg.json', 'r') as f:
         data = json.load(f)
         data = data['data']

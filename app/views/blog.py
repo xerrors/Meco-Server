@@ -3,7 +3,8 @@ from flask import request, jsonify, abort
 from app import app, db
 from app.utils.articles import parse_markdown, get_articles_from_db
 from app.utils.database import get_all_zhuanlan, get_page_view_by_path, rtn_friends
-from app.config import DOMAIN_PRE, TOKEN, PREFIX
+from app.config import DOMAIN_PRE, PREFIX
+from app.utils.private import TOKEN
 from app.tables import FriendsTable, ZhuanlanTable, LocalArticlesTable, LocalArticlesComment, Messages
 from datetime import datetime
 
