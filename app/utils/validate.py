@@ -1,6 +1,6 @@
 import hashlib
 
-from app.config import SERVER_TOKEN, ADMIN_NAME
+from app.utils.private import SERVER_TOKEN, ADMIN_NAME
 
 
 def validate_server_token(username, password):
