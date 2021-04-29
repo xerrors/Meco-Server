@@ -1,8 +1,8 @@
 from flask import Blueprint
 from flask import request, jsonify, abort, json, session
 from app import app, db
-from app.utils.articles import get_article_list_from_dirs, get_articles_from_db, scan_article_to_db, rename_markdown
-from app.utils.articles import get_articles_from_juejin, get_articles_from_csdn
+from app.utils.articles import get_article_list_from_dirs, get_articles_from_db, scan_article_to_db, save_md_to_file
+from app.utils.articles import get_articles_from_juejin, get_articles_from_csdn, parse_markdown
 from app.utils.validate import validate_server_token
 from app.utils.database import get_all_messages
 from app.utils.poster import get_posters, add_poster, delete_poster, set_as_top
@@ -84,13 +84,15 @@ def upload_markdown():
     if not session.get('login'):
         return not_login()
 
-    # 修改逻辑：对于已经存在的文章，应该发来该文章的 path，通过比对两次的 local 的 path
-    # 是否相同，然后决定是否对目录下的文章进行扫描
-
     md = request.get_data()
     path = request.args.get('path')
     revision = request.args.get('revision')
 
+    fm = parse_markdown(md, True)
+    if not fm.get('title') or not fm.get('date') or not fm.get('permalink'):
+        return jsonify({"message": "信息有误", "code": "403"})
+
+    # 如果是草稿文件是临时保存在草稿文件 draft.md 里面的
     if path == "draft":
         draft_path = os.path.join(DATA_PATH, 'draft.md')
         with open(draft_path, 'wb+') as f:
@@ -100,32 +102,21 @@ def upload_markdown():
         if revision != "1":
             return jsonify({"message": "已经保存为草稿"})
         else:
-            with open(draft_path, encoding='UTF-8') as f:
-                md = frontmatter.load(f)
+            if fm.get('permalink') == 'draft':
+                return jsonify({"message": "permalink 不能是 draft", "code": "403"})
 
-            if not md.get('title') or not md.get('date') or not md.get('permalink') or md.get('permalink') in ['draft', '/draft', 'draft/', '/draft/']:
-                abort(403, '请上传符合博客文章要求的文章~')
+            file_path = save_md_to_file(md, cur_path=draft_path)
+            return jsonify({"message": "新建文章{}".format(file_path), "data": fm.get('permalink')})
 
-            file_path = rename_markdown(md, cur_path=draft_path)
-            scan_article_to_db()
-            return jsonify({"message": "新建文章{}".format(file_path), "data": md.get('permalink').replace('/', '')})
-
-    else:
-        with open('temp.md', 'wb+') as f:
-            f.write(md)
-        with open('temp.md', encoding='UTF-8') as f:
-            md = frontmatter.load(f)
-
-        if not md.get('title') or not md.get('date') or not md.get('permalink'):
-            abort(403, '请上传符合博客文章要求的文章~')
-
-        file_path = rename_markdown(md)
-        item = db.session.query(
-            LocalArticlesTable).filter_by(path=path).first()
-
-        if not item or file_path != item.local_path:
-            scan_article_to_db()
-
+    else:  
+        if revision:      
+            if fm.get('permalink') != path:
+                return jsonify({"message": "不能修改 permalink，请重新修改~", "code": "403"})
+            else:
+                # 添加版本控制
+                pass
+        
+        file_path = save_md_to_file(md)
         return jsonify({"message": "已经保存到{}".format(file_path)})
 
 

@@ -9,19 +9,18 @@ from app.tables import CsdnArticlesTable, CsdnCount
 from app.tables import JuejinArticlesTable, JuejinCount
 from app.utils.database import get_page_view_by_path
 
-
 def get_article_list_from_dirs():
     assert os.path.exists(BLOG_PATH)
     article_list = []
 
     def extend_dir(path):
-        for file in os.listdir(path):
+        for _file in os.listdir(path):
             # 遍历所有文件
-            markdown_path = os.path.join(path, file)
+            markdown_path = os.path.join(path, _file)
 
             # 如果是文件夹递归读取，否则读取文件
             if os.path.isdir(markdown_path):
-                extend_dir(path=os.path.join(path, file))
+                extend_dir(path=os.path.join(path, _file))
             else:
                 article_list.append(parse_markdown(markdown_path).metadata)
 
@@ -34,22 +33,17 @@ def scan_article_to_db():
     article_list = []
 
     def extend_dir(path):
-        for file in os.listdir(path):
+        for _file in os.listdir(path):
             # 遍历所有文件
-            markdown_path = os.path.join(path, file)
+            markdown_path = os.path.join(path, _file)
 
             # 如果是文件夹递归读取，否则读取文件
             if os.path.isdir(markdown_path):
-                extend_dir(path=os.path.join(path, file))
+                extend_dir(path=os.path.join(path, _file))
             else:
                 cur_frontmatter = parse_markdown(markdown_path)
 
                 permalink = cur_frontmatter['permalink']
-
-                if permalink[0] == '/':
-                    permalink = permalink[1:]
-                if permalink[-1] == '/':
-                    permalink = permalink[:-1]
 
                 article = LocalArticlesTable.query.filter_by(path=permalink).first()
                 if article:
@@ -133,43 +127,63 @@ def get_articles_from_juejin():
 def get_articles_from_zhihu():
     return []
 
+def parse_markdown(markdown_data, isStr=False):
+    if isStr:
+        md = frontmatter.loads(markdown_data)
+    else:
+        with open(markdown_data, encoding='UTF-8') as f:
+            md = frontmatter.load(f)
 
-def parse_markdown(markdown_path):
-    with open(markdown_path, encoding='UTF-8') as f:
-        md = frontmatter.load(f)
-        # 去除不规范的链接名称
-        if md['permalink'][0] == '/':
-            md['permalink'] = md['permalink'][1:]
-        return md
+    # 去除不规范的链接名称
+    if md['permalink'][0] == '/':
+        md['permalink'] = md['permalink'][1:]
+    if md['permalink'][-1] == '/':
+        md['permalink'] = md['permalink'][:-1]
+    return md
 
 
-def rename_markdown(md, cur_path="temp.md"):
+def save_md_to_file(md, cur_path="temp.md"):
     # 解析文件名并根据分类保存到对应的文件目录下
-    path = md['permalink'][1:] if md['permalink'][0] == '/' else md['permalink']
+    fm = parse_markdown(md, True)
 
-    file_name = md['date'].strftime('%Y-%m-%d') + '-' + md['title'].replace(' ', '-') + '.md'
+    file_name = fm['date'].strftime('%Y-%m-%d') + '-' + fm['title'].replace(' ', '-') + '.md'
 
-    if type(md.get('categories')) == type([]):
-        file_path = os.path.join(BLOG_PATH, md.get('categories')[0])
-    elif type(md.get('categories')) == type(""):
-        file_path = os.path.join(BLOG_PATH, md.get('categories'))
+    if type(fm.get('categories')) == type([]):
+        file_path = os.path.join(BLOG_PATH, fm.get('categories')[0])
+    elif type(fm.get('categories')) == type(""):
+        file_path = os.path.join(BLOG_PATH, fm.get('categories'))
     else:
         file_path = os.path.join(BLOG_PATH, 'Others')
 
-    if md.get('zhuanlan'):
-        file_path = os.path.join(file_path, md.get('zhuanlan'), file_name)
+    if fm.get('zhuanlan'):
+        file_path = os.path.join(file_path, fm.get('zhuanlan'), file_name)
     else:
         file_path = os.path.join(file_path, file_name)
 
     # 判断该文章是否是已经存在数据库或者本地路径里面
-    item = LocalArticlesTable.query.filter_by(path=path).first()
+    item = LocalArticlesTable.query.filter_by(path=fm.get('permalink')).first()
 
-    if item and os.path.exists(item.local_path):
-        os.remove(item.local_path)
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    # 对于已经存在的文章要判断路径是否发生了改变，如果发生了改变直接重命名
+    if item:
+        if item.local_path != file_path and os.path.exists(item.local_path):
+            os.renames(item.local_path, file_path)
+        else:
+            with open(file_path, 'wb+') as f:
+                f.write(md)
+        item.update_local_path(file_path)
+    
+    else:
+        db.session.add(LocalArticlesTable(
+            path=fm.get('permalink'),
+            local_path=file_path
+        ))
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        else:
+            os.renames(cur_path, file_path)
 
-    os.renames(cur_path, file_path)
+    db.session.commit()
+    
     return file_path
 
 

@@ -64,6 +64,9 @@ class LocalArticlesTable(db.Model):
 
     def add_read(self):
         self.read_count += 1
+    
+    def update_local_path(self, new_path):
+        self.local_path = new_path
 
 
 class LocalArticlesComment(db.Model):
