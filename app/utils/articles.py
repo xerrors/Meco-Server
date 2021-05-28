@@ -146,7 +146,9 @@ def save_md_to_file(md, cur_path="temp.md"):
     # 解析文件名并根据分类保存到对应的文件目录下
     fm = parse_markdown(md, True)
 
-    file_name = fm['date'].strftime('%Y-%m-%d') + '-' + fm['title'].replace(' ', '-') + '.md'
+    import re
+    title_name = re.sub("[^\u4e00-\u9fffa-zA-Z0-9\+\-]+", "-", fm['title'])
+    file_name = fm['date'].strftime('%Y-%m-%d') + '-' + title_name + '.md'
 
     if type(fm.get('categories')) == type([]):
         file_path = os.path.join(BLOG_PATH, fm.get('categories')[0])

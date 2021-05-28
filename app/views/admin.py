@@ -67,16 +67,11 @@ def get_markdown():
     item = db.session.query(LocalArticlesTable).filter_by(path=path).first()
 
     if not item:
-        scan_article_to_db()
-        item = db.session.query(
-            LocalArticlesTable).filter_by(path=path).first()
-
-    if item:
-        with open(item.local_path, encoding='UTF-8') as f:
-            data = f.read()
-            return jsonify({"data": data})
-    else:
         abort(404, "不存在该文章！")
+
+    with open(item.local_path, encoding='UTF-8') as f:
+        data = f.read()
+        return jsonify({"data": data})
 
 
 @mod.route('/articles/md_source', methods=["POST"])
@@ -119,6 +114,30 @@ def upload_markdown():
         file_path = save_md_to_file(md)
         return jsonify({"message": "已经保存到{}".format(file_path)})
 
+
+@mod.route('/articles/remove', methods=["POST"])
+def delete_article():
+    """删除文章
+    1. 从数据库检索需要删除的文章
+    2. 将文章转移到回收站，从数据库中删除文章
+    """
+    if not session.get('login'):
+        return not_login()
+
+    path = request.args.get('path')
+    item = db.session.query(LocalArticlesTable).filter_by(path=path).first()
+
+    if not item:
+        abort(404, "不存在该文章！")
+    
+    db.session.delete(item)
+    db.session.commit()
+
+    os.renames(
+        item.local_path,
+        os.path.join(DATA_PATH, 'RecycleBin', item.local_path.split('/')[-1]))
+    
+    return jsonify({"message": "已移动到回收站~", "data": get_articles_from_db()})
 
 @mod.route('/logged', methods=["GET"])
 def check_is_logged():
