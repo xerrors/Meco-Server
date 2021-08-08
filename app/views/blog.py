@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import request, jsonify, abort
 from app import app, db
 from app.utils.articles import parse_markdown, get_articles_from_db
-from app.utils.database import get_all_zhuanlan, get_page_view_by_path, rtn_friends
+from app.utils.database import get_all_zhuanlan, get_page_view_by_path, get_page_view_count_by_path, rtn_friends
 from app.config import DOMAIN_PRE, PREFIX
 from app.utils.private import TOKEN
 from app.tables import FriendsTable, ZhuanlanTable, LocalArticlesTable, LocalArticlesComment, Messages
@@ -19,16 +19,21 @@ def visit():
 
     if not path:
         abort(403, "有毛病吧！")
+    ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+    pv_log = get_page_view_by_path(path, 3)
+    for item in pv_log:
+        if ip == item.ip:
+            return jsonify({"message": "It doesn't count this time"})
 
     from app.tables import PageViewTable
     db.session.add(PageViewTable(
-        ip=request.environ.get('HTTP_X_REAL_IP', request.remote_addr),
+        ip=ip,
         path=path,
         user_agent=request.user_agent.browser,
     ))
     db.session.commit()
 
-    count = get_page_view_by_path(request.args.get("count"))
+    count = get_page_view_count_by_path(request.args.get("count"))
     return jsonify({"message": "Welcome", "data": count})
 
 

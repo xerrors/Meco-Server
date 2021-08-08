@@ -26,7 +26,7 @@ def get_timezone_pv(start, end=None):
     if not end:
         end = date.today()
 
-    return PageViewTable.query.filter(
+    return PageViewTable.query.filter(PageViewTable.user_agent!='google').filter(
         PageViewTable.date <= end
     ).filter(
         PageViewTable.date > start
@@ -42,7 +42,7 @@ def get_all_count():
     week_message = month_message.filter(Messages.date > week_ago)
     day_message = week_message.filter(Messages.date > day_ago)
 
-    month_pv = get_timezone_pv(month_ago)
+    month_pv = get_timezone_pv(month_ago).filter(PageViewTable.user_agent != 'google')
     week_pv = month_pv.filter(PageViewTable.date > week_ago)
     day_pv = week_pv.filter(PageViewTable.date > day_ago)
 
@@ -59,7 +59,7 @@ def get_all_count():
     week_comment_count = week_message.count() - week_like_count
     month_comment_count = month_message.count() - month_like_count
 
-    all_pv = PageViewTable.query.count()
+    all_pv = PageViewTable.query.filter(PageViewTable.user_agent != 'google').count()
     all_comment = LocalArticlesComment.query.count()
     all_like = Messages.query.count() - all_comment
 

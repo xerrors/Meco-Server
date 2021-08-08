@@ -150,6 +150,16 @@ class PageViewTable(db.Model):
     path = db.Column(db.String(256)) # 去除协议和域名的路径部分
     user_agent = db.Column(db.String(256))
 
+    def to_json(self):
+        json_data = {
+            "id": self.id,
+            "ip": self.ip,
+            "date": self.date,
+            "path": self.path,
+            "user_agent": self.user_agent,
+        }
+        return json_data
+
 
 class ZhuanlanTable(db.Model):
     __tablename__ = "ZhuanlanTable"

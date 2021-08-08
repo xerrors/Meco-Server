@@ -2,9 +2,9 @@ from flask import Blueprint
 from flask import request, jsonify, abort, json, session
 from app import app, db
 from app.utils.articles import get_article_list_from_dirs, get_articles_from_db, scan_article_to_db, save_md_to_file
-from app.utils.articles import get_articles_from_juejin, get_articles_from_csdn, parse_markdown
+from app.utils.articles import get_articles_from_juejin, get_articles_from_csdn, parse_markdown, version_control
 from app.utils.validate import validate_server_token
-from app.utils.database import get_all_messages
+from app.utils.database import get_all_messages, get_all_page_view_log
 from app.utils.poster import get_posters, add_poster, delete_poster, set_as_top
 from app.utils.count import get_all_count, get_last_days
 from app.utils.private import ALI_ACCESSKEY_ID, ALI_ACCESSKEY_SECRET, ALI_BUCKET, ALI_ENDPOINT
@@ -26,6 +26,14 @@ ms = MachineStatus()
 
 def not_login(msg='登录之后再试~'):
     return jsonify({"message": '登录之后再试~', 'code': 2000})
+
+# 测试连接
+@mod.route('/test-connect', methods=["GET"])
+def test_connection():
+    if not session.get('login'):
+        return not_login()
+    
+    return jsonify({"message": "Good News"})
 
 
 # 获取文章列表
@@ -88,6 +96,7 @@ def upload_markdown():
         return jsonify({"message": "信息有误", "code": "403"})
 
     # 如果是草稿文件是临时保存在草稿文件 draft.md 里面的
+    # 注意这里的 path 是 url 里面的路径，不是 frontmatter
     if path == "draft":
         draft_path = os.path.join(DATA_PATH, 'draft.md')
         with open(draft_path, 'wb+') as f:
@@ -101,17 +110,19 @@ def upload_markdown():
                 return jsonify({"message": "permalink 不能是 draft", "code": "403"})
 
             file_path = save_md_to_file(md, cur_path=draft_path)
+            version_control(file_path)
             return jsonify({"message": "新建文章{}".format(file_path), "data": fm.get('permalink')})
 
-    else:  
-        if revision:      
+    else:
+        file_path = save_md_to_file(md)
+
+        if revision == '1' or revision == 1:      
             if fm.get('permalink') != path:
                 return jsonify({"message": "不能修改 permalink，请重新修改~", "code": "403"})
             else:
                 # 添加版本控制
-                pass
+                version_control(file_path)
         
-        file_path = save_md_to_file(md)
         return jsonify({"message": "已经保存到{}".format(file_path)})
 
 
@@ -136,6 +147,7 @@ def delete_article():
     os.renames(
         item.local_path,
         os.path.join(DATA_PATH, 'RecycleBin', item.local_path.split('/')[-1]))
+    version_control(item.local_path)
     
     return jsonify({"message": "已移动到回收站~", "data": get_articles_from_db()})
 
@@ -165,7 +177,7 @@ def admin_login():
     if validate_server_token(username, password):
         from datetime import timedelta
         session.permanent = True
-        app.permanent_session_lifetime = timedelta(minutes=60)  # 存活60分钟
+        app.permanent_session_lifetime = timedelta(minutes=600)  # 存活60分钟
         session['login'] = 'True'
         print(session.get('login'))
         return jsonify({"message": '登录成功~', "code": '1000'})
@@ -324,6 +336,17 @@ def route_count_days():
     days = request.args.get('days')
 
     return jsonify({"data": get_last_days(int(days) or 90)})
+
+
+# 获取访问日志
+@mod.route('/page-view-log/all', methods=["GET"])
+def on_get_all_pv_log():
+    if not session.get('login'):
+        return not_login()
+
+    cursor = int(request.args.get("cursor"))
+
+    return jsonify({"message": "Success", "data": get_all_page_view_log(cursor)})
 
 
 # 获取服务器状态信息
